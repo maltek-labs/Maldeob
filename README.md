@@ -9,3 +9,7 @@ Current scripts types that are supported:
 
   - Jscript/JavaScript
 
+
+Upcoming features:  
+- Inline node.js support
+- Automatic JScript/JavaScript variable deobfucating

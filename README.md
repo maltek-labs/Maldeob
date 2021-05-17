@@ -15,7 +15,8 @@ Current script types that are supported:
 
 
 Upcoming features:  
-- Inline node.js support
+- Automatic variable noise removal
+- Automatic pulling of array contents for initial setup
 - Automatic JScript/JavaScript variable deobfucating
 
 

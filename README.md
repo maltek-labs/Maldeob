@@ -1,31 +1,35 @@
-# Maltek Labs Replacer/Deobfuscator Framework(WIP) v.1 
-Current feature set still in development. 
+# Maltek Labs Replacer/Deobfuscator Framework(WIP) v0.5 
 
 Website: https://maltek-labs.com                                   
 #
 In-progress static code deobfuscator aimed as deobfuscating malicious code by finding & replacing data, evaluating variables, and more. The aim of this project is to have a framework of tools that can be selected in order to automate the deobfuscation for a different number of script types.
 
 Current features:  
-1. Array deobfuscator: Replaces indexed data within the malicious script with the supplied array. 
+1. Array deobfuscator: Replaces indexed data within the malicious script by automatically pulling the an array's contents and replaces indexed data if possible. 
+2. Variable noise removal: Automatic Removal of initialized but not called variables from scripts. Reduces noise and speeds up analysis. 
 
 
-Current script types that are supported:  
 
+# Current script types that are supported:  
   - Jscript/JavaScript
 
 
-Upcoming features:  
-- Automatic variable noise removal
-- Automatic pulling of array contents for initial setup
-- Automatic JScript/JavaScript variable deobfucating
+# Upcoming features:  
+- Javascript/Jscript beautify code.
+- Automatic JScript/JavaScript variable deobfuscating
 
 
-# Instructions:
+# Help File:
 
-1. Array must be manually pulled from script and saved in a separate file with each value on a new line. Extra characters that are not part of the array (commas, semi-colons, etc) must be manually removed.
-2. Once the contents of the array has been saved use the arguments below to run the script.
-                                                            
--h, --help            show this help message and exit  
--a ARRAY, --array ARRAY  PATH to array file  
--i INPUT, --input INPUT  PATH to inputfile  
--o OUTPUT, --output OUTPUT  PATH to output the completed file.
+-h, --help            Show this help message and exit                             
+-a, --array           Use -a if malicious script contains an array indexing       
+				                obfuscation method. EG (array_name[0], array_name[1], etc)
+-v, --variable        Use -v to find all instances of variables that are          
+				                initialized but not called. Removes variable noise.       
+--version             Show program's version number and exit.                     
+																			 
+required arguments:                                                                 
+-i INPUT, --input INPUT                                                           
+					PATH to malicious script.                                
+-o OUTPUT, --output OUTPUT                                                        
+					PATH to output the completed file.

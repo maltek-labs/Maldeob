@@ -22,10 +22,10 @@ Run Maldeob.py by supplying the input file (-i) and path + filename to output fi
 3. JavaScript/JScript beautifier: Uses the js-beautify project to beautifier inputed file to the specified output file. 
 
 # Upcoming features:  
-- Automatic JScript/JavaScript variable deobfuscating (Replaces/evals variables to their contents through the inputted script usings Googles V8 Engine and Maldeob's built-in functions.
-- Automatic additional Stage/payload extraction (Extracts additional malware stages/payloads and drops to current folder in file format "Payload_EXT.file": IE: Payload_JS.file, Payload_PS1.file, Payload_PE.file, etc
-- Extraction of IOC/IOAs from completed script. This will be outputted to a "Malware_Details.txt" file. 
-- Classification of Malicious Scripts via indicators and/or YARA. IE: Trojon/Worm/Virus.(Dropper, Downloader, etc)_REMCOS
+- Automatic JScript/JavaScript variable deobfuscating. Replaces/evals variables to their contents through the inputted script usings Googles V8 Engine and Maldeob's built-in functions.
+- Automatic additional Stage/payload extraction. Extracts additional malware stages/payloads and drops to current folder in file format "Payload_EXT.file": IE: Payload_JS.file, Payload_PS1.file, Payload_PE.file, etc
+- Extraction of IOC/IOAs from deobfuscated/reverse engineered script. This will be outputted to a "Malware_Details.txt" file. 
+- Classification of Malicious Scripts via IOCs/IOAs and/or YARA. IE: Trojon/Worm/Virus.(Dropper, Downloader, etc)_REMCOS.RAT
 - setup.py to aide in the installation of packages. Will be completed on v1 release. 
 
 # Upcoming Script type(s) supported:  

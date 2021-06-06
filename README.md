@@ -6,9 +6,11 @@ In-progress static code deobfuscator aimed as deobfuscating malicious code by fi
 
 The aim of this project is to have a framework of tools that can be selected in order to automate the deobfuscation for a different number of script/malware types to aide in the initial stages of malware analysis, the extraction IOC/IOAs, and the classification of malware. 
 
+- Tested & works on both Windows & Linux
+
 # Instructions: 
 1. Install requirements using ```pip install -r requirements.txt```
-2. Run Maldeob.py by supplying the input file (-i) and path + filename to output file (-o). Inputted file will be read in, beautified, & outputted file + any additional stages/payloads found will be outputted to the outputs folder.
+2. Run main.py by supplying the input file (-i) to malicious script (with original file extension[IE: .js]), + (-o) with name of file with extension of choosing. Inputted file will be read in, beautified, & outputted file + any additional stages/payloads found will be outputted to the outputs folder. ```-i PATH/malware.js -o output.js```
 
 # Frameworks/Projects Incorporated:  
 - JS Beautfier Project: https://github.com/beautify-web/js-beautify

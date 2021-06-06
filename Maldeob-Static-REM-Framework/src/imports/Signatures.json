@@ -1,0 +1,421 @@
+[
+    {
+       "ascii":".",
+       "description":"MacStuffit Self-Extracting Archive",
+       "file_extension":"SEA",
+       "hex":"00 nn",
+       "offset":"0"
+    },
+    {
+       "ascii":"..",
+       "description":"compressed file (often tar zip)",
+       "file_extension":"z",
+       "hex":"1F 9D",
+       "offset":"0"
+    },
+    {
+       "ascii":"..",
+       "description":"Compressed file (often tar zip)",
+       "file_extension":"z",
+       "hex":"1F A0",
+       "offset":"0"
+    },
+    {
+       "ascii":"..",
+       "description":"usingLZH algorithm",
+       "file_extension":"tar.z",
+       "hex":"1F A0",
+       "offset":"0"
+    },
+    {
+       "ascii":"BZh",
+       "description":"Compressed file usingBzip2 algorithm",
+       "file_extension":"bz2",
+       "hex":"42 5A 68",
+       "offset":"0"
+    },
+    {
+       "ascii":[
+          "GIF87a",
+          "GIF89a"
+       ],
+       "description":"Image file encoded in theGraphics Interchange Format (GIF)",
+       "file_extension":"gif",
+       "hex":[
+          "47 49 46 38 37 61",
+          "47 49 46 38 39 61"
+       ],
+       "offset":"0"
+    },
+    {
+       "ascii":"ÿØÿÛ",
+       "description":"JPEG raw or in theJFIF orExif file format",
+       "file_extension":"jpg",
+       "hex":"FF D8 FF DB",
+       "offset":"0"
+    },
+    {
+       "ascii":"ÿØÿÛ",
+       "description":"JPEG raw or in theJFIF orExif file format",
+       "file_extension":"jpeg",
+       "hex":"FF D8 FF DB",
+       "offset":"0"
+    },
+    {
+       "ascii":"ÿØÿà ..J F IF..",
+       "description":"JPEG raw or in theJFIF orExif file format",
+       "file_extension":"jpg",
+       "hex":"FF D8 FF E0 nn nn 4A 46 49 46 00 01",
+       "offset":"0"
+    },
+    {
+       "ascii":"ÿØÿà ..J F IF..",
+       "description":"JPEG raw or in theJFIF orExif file format",
+       "file_extension":"jpeg",
+       "hex":"FF D8 FF E0 nn nn 4A 46 49 46 00 01",
+       "offset":"0"
+    },
+    {
+       "ascii":"ÿØÿá ..E x if..",
+       "description":"JPEG raw or in theJFIF orExif file format",
+       "file_extension":"jpg",
+       "hex":"FF D8 FF E1 nn nn 45 78 69 66 00 00",
+       "offset":"0"
+    },
+    {
+       "ascii":"ÿØÿá ..E x if..",
+       "description":"JPEG raw or in theJFIF orExif file format",
+       "file_extension":"jpeg",
+       "hex":"FF D8 FF E1 nn nn 45 78 69 66 00 00",
+       "offset":"0"
+    },
+    {
+       "ascii":"FORM.... FTXT",
+       "description":"IFFFormatted Text",
+       "file_extension":"txt",
+       "hex":"46 4F 52 4D nn nn nn nn 46 54 58 54",
+       "offset":"any"
+    },
+    {
+       "ascii":"LZIP",
+       "description":"lzip compressed file",
+       "file_extension":"lz",
+       "hex":"4C 5A 49 50",
+       "offset":"0"
+    },
+    {
+       "ascii":"MZ",
+       "description":"DOS MZ executable file format and its descendants ",
+       "file_extension":"exe",
+       "hex":"4D 5A",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"zip",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"jar",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"odt",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"ods",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"odp",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"docx",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"xlsx",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"pptx",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"vsdx",
+       "hex":"50 4B 03 04",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"zip",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"jar",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"odt",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"ods",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"odp",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"docx",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"xlsx",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"pptx",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"vsdx",
+       "hex":"50 4B 05 06",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"zip",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"jar",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"odt",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"ods",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"odp",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"docx",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"xlsx",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"pptx",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"PK..",
+       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "file_extension":"vsdx",
+       "hex":"50 4B 07 08",
+       "offset":"0"
+    },
+    {
+       "ascii":"Rar!...",
+       "description":"RAR archive version 1.50 onwards",
+       "file_extension":"rar",
+       "hex":"52 61 72 21 1A 07 00",
+       "offset":"0"
+    },
+    {
+       "ascii":"Rar!....",
+       "description":"RAR archive version 5.0 onwards",
+       "file_extension":"rar",
+       "hex":"52 61 72 21 1A 07 01 00",
+       "offset":"0"
+    },
+    {
+       "ascii":".ELF",
+       "description":"Executable and Linkable Format",
+       "file_extension":"",
+       "hex":"7F 45 4C 46",
+       "offset":"0"
+    },
+    {
+       "ascii":".PNG....",
+       "description":"Image encoded in thePortable Network Graphics format",
+       "file_extension":"png",
+       "hex":"89 50 4E 47 0D 0A 1A 0A",
+       "offset":"0"
+    },
+    {
+       "ascii":"Êþº¾",
+       "description":"Java class file,Mach-O Fat Binary.",
+       "file_extension":"class",
+       "hex":"CA FE BA BE",
+       "offset":"0"
+    },
+    {
+       "ascii":"%PDF",
+       "description":"PDF document.",
+       "file_extension":"pdf",
+       "hex":"25 50 44 46",
+       "offset":"0"
+    },
+    {
+       "ascii":"",
+       "description":"Compound File Binary Format.",
+       "file_extension":"doc",
+       "hex":"D0 CF 11 E0 A1 B1 1A E1",
+       "offset":""
+    },
+    {
+       "ascii":"",
+       "description":"Compound File Binary Format.",
+       "file_extension":"xls",
+       "hex":"D0 CF 11 E0 A1 B1 1A E1",
+       "offset":""
+    },
+    {
+       "ascii":"",
+       "description":"Compound File Binary Format, a container.",
+       "file_extension":"ppt",
+       "hex":"D0 CF 11 E0 A1 B1 1A E1",
+       "offset":""
+    },
+    {
+       "ascii":"",
+       "description":"Compound File Binary Format, a container format.",
+       "file_extension":"msg",
+       "hex":"D0 CF 11 E0 A1 B1 1A E1",
+       "offset":""
+    },
+    {
+       "ascii":"Cr24",
+       "description":"Google Chrome extensionor packaged app",
+       "file_extension":"crx",
+       "hex":"43 72 32 34",
+       "offset":"0"
+    },
+    {
+       "ascii":"xar!",
+       "description":"eXtensible Archive format",
+       "file_extension":"xar",
+       "hex":"78 61 72 21",
+       "offset":"0"
+    },
+    {
+       "ascii":"PMOCCMOC",
+       "description":"Windows Files And Settings Transfer Repository",
+       "file_extension":"dat",
+       "hex":"50 4D 4F 43 43 4D 4F 43",
+       "offset":"0"
+    },
+    {
+       "ascii":"ustar.00ustar  .",
+       "description":"tar archive",
+       "file_extension":"tar",
+       "hex":"75 73 74 61 72 00 30 30 75 73 74 61 72 20 20 00",
+       "offset":"0x101"
+    },
+    {
+       "ascii":"7z¼¯",
+       "description":"7-Zip File Format",
+       "file_extension":"7z",
+       "hex":"37 7A BC AF 27 1C",
+       "offset":"0"
+    },
+    {
+       "ascii":"..",
+       "description":"GZIP",
+       "file_extension":"gz",
+       "hex":"1F 8B",
+       "offset":"0"
+    },
+    {
+       "ascii":"..",
+       "description":"GZIP",
+       "file_extension":"tar.gz",
+       "hex":"1F 8B",
+       "offset":"0"
+    }
+ ]

@@ -106,7 +106,7 @@
     {
        "ascii":"MZ",
        "description":"DOS MZ executable file format and its descendants ",
-       "file_extension":"exe",
+       "file_extension":"PE",
        "hex":"4D 5A",
        "offset":"0"
     },

@@ -2,9 +2,9 @@
 
 import sys, argparse, re, jsbeautifier, base64, binascii, json, pathlib
 
-imports = pathlib.Path(r'Maldeob - Malware Deobfuscator/src/imports').resolve()
-outputs = pathlib.Path(r'Maldeob - Malware Deobfuscator/src/outputs').resolve()
-json_file = imports / r'Signatures.json'
+imports = pathlib.Path('imports').resolve()
+outputs = pathlib.Path('outputs').resolve()
+json_file = imports / 'Signatures.json'
 
 ###############################################################################################################
 # Parses and pull data from Base64_array, decodes, then appends resulting files/data to File_list & Signature_Check arrays
@@ -58,6 +58,7 @@ def Stage_Puller(Base64_Array, File_list, Signature_Check):
             item += 1
 
 ###############################################################################################################
+# Replaces Variables foundwith their contents with a few exceptions. 
 
 def Variable_Replacer(Converted_Text, Variable_Array):
     i = 0
@@ -91,8 +92,9 @@ def Variable_Replacer(Converted_Text, Variable_Array):
         i += 1
     return Converted_Text
 
-###########################################################################
+###############################################################################################################
 # Finds and replaces data in array if arrays exist
+
 def Array_Replacer(Converted_Text, Array_Name_Match1, Array_Name_Match2, Array_Name_Match3, Array_Name_Match4, Array_VarName, CompletedList, VarName_Array):
     if re.search(r"(.*var.*\[.*?\])", Converted_Text, re.MULTILINE):
     
@@ -151,6 +153,4 @@ def Array_Replacer(Converted_Text, Array_Name_Match1, Array_Name_Match2, Array_N
             
         i += 1
     return Converted_Text
-
-
-
+###############################################################################################################

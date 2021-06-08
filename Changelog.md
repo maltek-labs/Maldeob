@@ -1,5 +1,9 @@
 # What's New? 
 
+**Minor Update: v0.7.1**
+- Fixed path bug due to structure change upon previous upload. Minor version updates in code. 
+
+
 **Update: v0.7.0**
 - Fixed array's JavaScript/JScript variable names + contents from not being properly picked up & replaced. Arrays/contents are now picked up
 - Completed Partial variable replacement. Replaces certain variables that are defined with their contents in the script providing better visibility. Google V8's engine is in the works to be incorporated.

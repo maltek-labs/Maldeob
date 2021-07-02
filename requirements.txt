@@ -1,1 +1,5 @@
 jsbeautifier==1.13.13
+oletools==0.60
+pywin32==301
+XLMMacroDeobfuscator==0.1.6
+regex==2021.4.4

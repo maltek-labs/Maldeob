@@ -15,14 +15,7 @@
     },
     {
        "ascii":"..",
-       "description":"Compressed file (often tar zip)",
-       "file_extension":"z",
-       "hex":"1F A0",
-       "offset":"0"
-    },
-    {
-       "ascii":"..",
-       "description":"usingLZH algorithm",
+       "description":"Compressed file usingLZH algorithm",
        "file_extension":"tar.z",
        "hex":"1F A0",
        "offset":"0"
@@ -112,189 +105,189 @@
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"zip",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"jar",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"odt",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"ods",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"odp",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"docx",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"xlsx",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"pptx",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"vsdx",
        "hex":"50 4B 03 04",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"zip",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"jar",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"odt",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"ods",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"odp",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"docx",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"xlsx",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"pptx",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"vsdx",
        "hex":"50 4B 05 06",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"zip",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"jar",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"odt",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"ods",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"odp",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"docx",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"xlsx",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"pptx",
        "hex":"50 4B 07 08",
        "offset":"0"
     },
     {
        "ascii":"PK..",
-       "description":"zip file format and formats based on it, such asJAR,ODF,OOXML",
+       "description":"zip file format and formats based on it, such as jar, odf, ooxml, docx, xlsx, pptx",
        "file_extension":"vsdx",
        "hex":"50 4B 07 08",
        "offset":"0"
@@ -343,14 +336,14 @@
     },
     {
        "ascii":"",
-       "description":"Compound File Binary Format.",
+       "description":"Compound File Binary Format such as DOC & XLS files.",
        "file_extension":"doc",
        "hex":"D0 CF 11 E0 A1 B1 1A E1",
        "offset":""
     },
     {
        "ascii":"",
-       "description":"Compound File Binary Format.",
+       "description":"Compound File Binary Format such as DOC & XLS files.",
        "file_extension":"xls",
        "hex":"D0 CF 11 E0 A1 B1 1A E1",
        "offset":""
@@ -368,13 +361,6 @@
        "file_extension":"msg",
        "hex":"D0 CF 11 E0 A1 B1 1A E1",
        "offset":""
-    },
-    {
-       "ascii":"Cr24",
-       "description":"Google Chrome extensionor packaged app",
-       "file_extension":"crx",
-       "hex":"43 72 32 34",
-       "offset":"0"
     },
     {
        "ascii":"xar!",
@@ -408,13 +394,6 @@
        "ascii":"..",
        "description":"GZIP",
        "file_extension":"gz",
-       "hex":"1F 8B",
-       "offset":"0"
-    },
-    {
-       "ascii":"..",
-       "description":"GZIP",
-       "file_extension":"tar.gz",
        "hex":"1F 8B",
        "offset":"0"
     }

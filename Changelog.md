@@ -1,5 +1,17 @@
 # What's New? 
 
+**Major update: v0.9.0**
+- Added PowerShell Script analysis support with the following below:
+    1. General code clean up (Replaces CHAR values with ascii, newlines from ';', removes defined excessive & useless/ignored characters, etc).
+    2. Finds & pulls HEX/Base64 encoded payloads.
+    3. Base64 content decoding and replacement of decoded content.
+    4. Removes single initialized variables to clean up code. 
+- Improved Base64 payload extraction and deobfuscation of content in JS/VBA methods.
+- General code improvements and performance increases during analysis.
+- Recursive file analysis. All extracted payload/stages are analyzed as found. 
+- Added Unzip.py to handle zip files found. 
+- Improved IOC/IOA gathering by including Domains, Emails, Registry entries, Bitcoin Crypto Addresses, and Onion Addresses.
+
 **Major update: v0.8.0**
 - Added VBA support via OleVBA. 
 - Added 5 known obfuscation methods to be programically deobfuscated for VBA code.

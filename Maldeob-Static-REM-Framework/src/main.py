@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
-import sys, argparse, re, jsbeautifier, base64, binascii, json, pathlib, os, oletools
+import sys, argparse, re, binascii, pathlib, os
 from imports.Signature import Signature, File_Check
 from imports.IOC_IOA_Report import MalwareDetails_Report
-from imports.JS import Beautify_JS, Single_Init_Variable_Replace, Array_Replacer, Variable_Replacer, Base64_Stage_Puller, Write_JS
-from imports.VBA import Check_VBA, Single_Init_Var, VBA_Var_Replace, VBA_ChrW_Replace, VBA_HEX_Replace, String_Replace
+from imports.JS import JS_File
+from imports.VBA import Check_VBA, VBA_File
+from imports.PS1 import PowerShell_File
+from imports.UnZip import Unzip_File
 
 os.chdir(sys.path[0])
 
 imports = pathlib.Path('imports').resolve()
 outputs = pathlib.Path('outputs').resolve()
-json_file = 'imports/Signatures.json'
 
 ###############################################################################################################
 print( 
@@ -26,7 +27,7 @@ print(
                 #                           https://maltek-labs.com                                   #
                 #                       -Protection begins with analysis-                             #
                 #                                                                                     #
-                #                  Maltek Labs Static REM Framework v0.8.0                            #
+                #                  Maltek Labs Static REM Framework v0.9.0                            #
                 #######################################################################################
                 # optional arguments:                                                                 #
                 #   -h, --help            Show this help message and exit                             #
@@ -35,8 +36,6 @@ print(
                 # required arguments:                                                                 #
                 #   -i INPUT, --input INPUT                                                           #
                 #                            PATH to malicious script.                                #
-                #   -o OUTPUT, --output OUTPUT                                                        #
-                #                            PATH to output the completed file.                       #
                 #                                                                                     #
                 #######################################################################################
                 '''
@@ -48,42 +47,34 @@ parser = argparse.ArgumentParser(description='Maltek Labs Static REM Framework',
 # CMDLine arguments to be passed
 parser.add_argument('-h','--help', action='store_true')
 parser.add_argument("-i", '--input', help="PATH to malicious script.", type=str)
-parser.add_argument('--version', action='version', version='%(prog)s 0.8.0')
+parser.add_argument('--version', action='version', version='%(prog)s 0.9.0')
 
-# Sets up arguments
+# Set up arguments
 args = vars(parser.parse_args())
 ifile = args['input']
 helpme = args['help']
 
-# Sets up lists for future use
+# Set up lists for future use
 File_List = []
 
 ###############################################################################################################
 
-ifile_Name = re.search(r'[\/\\](\w{1,}\.\w{1,})|[\/\\](\w{1,})$', ifile, re.IGNORECASE).group(1)
-if ifile_Name:
-    pass
-else:
-    ifile_Name = re.search(r'[\/\\](\w{1,}\.\w{1,})|[\/\\](\w{1,})$', ifile, re.IGNORECASE).group(2)
-
-######################################################################################
-
 def File_Type(ifile):
     try:
-
+        
         with open(ifile, 'r') as payload:
            payload = payload.read()       
-        
-        #checks to see if Script Matches Regex values by calling File_Check in Signatures.py then writes to outputs folder if it exists. 
+
+        # Checks to see if Script Matches Regex values by calling File_Check in Signatures.py then writes to outputs folder if it exists.
         File_Found = File_Check(payload)    
 
         return File_Found    
     
     except UnicodeDecodeError:
-        
+        # Upon decode and a UniDecodeError occurs, error handling will occur as a binary file has been detected instead of base UTF-8 encoded file. 
         with open(ifile, 'rb') as payload:
             byte = payload.read(30)
-        payload.close()
+        
         # Builds the Bytes in HEX format.
         Magic_Byte = str(binascii.hexlify(byte)).replace('b\'', '').replace('\'', '').upper()
         
@@ -95,55 +86,7 @@ def File_Type(ifile):
         # Checks to see if Magic Byte value exists by calling Signature from Signatures.py then writes to outputs folder if it exists. 
         File_Found = Signature(Magic_Byte)
         
-        
         return File_Found
-
-def JS_File(ifile):
-    JS = Beautify_JS(ifile)
-    JS = Single_Init_Variable_Replace(JS)
-    
-    if re.search(r".*var.*\[.*?\]", JS, re.MULTILINE):
-        JS = Array_Replacer(JS)
-    
-    JS = Variable_Replacer(JS)
-    JS = Single_Init_Variable_Replace(JS)
-    
-    if re.search(r"((?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/][AQgw]==|[A-Za-z0-9+\/]{2}[AEIMQUYcgkosw048]=)?)", JS, re.MULTILINE):
-        Base64_Stage_Puller(JS, File_List)
-    
-    Write_JS(JS)
-    
-    return JS
-
-def VBA_File(VBA):
-    
-    if VBA:
-        try: 
-            if re.search(r'ChrW\(\d{1,3}\)|Chr\(\d{1,3}\)', VBA, re.MULTILINE):
-                Match = True
-
-                VBA = Single_Init_Var(VBA)
-                VBA = VBA_ChrW_Replace(VBA)
-                VBA = VBA_Var_Replace(VBA)
-            elif re.search(r'\"([0-9a-fA-F]{2,})\"|\'([0-9a-fA-F]{2,})\'', VBA, re.MULTILINE):
-                Match = True
-
-                VBA = Single_Init_Var(VBA)
-                VBA = VBA_Var_Replace(VBA)
-                VBA = VBA_HEX_Replace(VBA)
-   
-            elif re.search(r'\b\w{1,}\b\s=\s\".*?\"|\b\w{1,}\b\s=\s\'.*?\'', VBA, re.MULTILINE):
-                Match = True
-                VBA = String_Replace(VBA)
-            
-            if Match:
-                with open(f"{outputs}/Payload_Deobfuscated_VBA.file", 'w') as payload:
-                    payload.write(VBA)
-                payload.close()
-                print(f'Deobfuscated VBA Code has been saved to {outputs} as Payload_Deobfuscated_VBA.file.\n')
-        except:
-            print('No pre-coded matching signatures found for malware obfuscation methods.\n')
-            print('Manual investigation & deobfuscation will be needed.\n')
 
 ###############################################################################################################
     
@@ -159,12 +102,22 @@ if __name__ == "__main__":
         if File:
             if File == 'JS':
                 JS = JS_File(ifile)
-                File_List.append('Payload__Deobfuscated_JS.file')
+                File_List.append('Payload_JS.file')
+            
             elif File == 'VBA_File':
                 with open(ifile, 'r') as r:
                     VBA = r.read()
+                r.close()
                 
                 VBA = VBA_File(VBA)
+                File_List.append('Payload_VBA.file')
+
+            elif File == 'PS1':
+                with open(ifile, 'r') as r:
+                    PS_Code = r.read()
+                r.close()
+                
+                PowerShell_File(PS_Code)
             
             elif File == 'PE':
                 pass
@@ -174,17 +127,14 @@ if __name__ == "__main__":
                 
                 VBA = Check_VBA(ifile)
             
-                
-            for item in os.listdir(outputs):
+            i = 0
+            Dir_List = os.listdir(outputs)
+            
+            for item in Dir_List:
                 
                 # Search for File Payloads & types found then run based on script type
-                if re.search(r'(Payload_Stage\d_.*\.)file|(Payload_.*\.file)', item):
-                    if re.search(r'(Payload_Stage\d_.*\.file)', item):
-                        File = re.search(r'(Payload_Stage\d_.*\.)file', item).group(1)
-                    else:
-                        
-                        File = re.search(r'(Payload_.*\.file)', item).group(1)
-                    
+                if re.search(r'Payload_.*\.file', item):                      
+                    File = re.search(r'(Payload_.*\.file)', item).group(1)
                     
                     if File not in File_List:
                         File_List.append(File)
@@ -196,23 +146,27 @@ if __name__ == "__main__":
 
                         # Search for Additional Payloads found then re-run JS_File. 
                         if Script_Type == 'JS':
-                            if re.search(r'Payload_Stage\d_JS\.file', item):
-                                Stage = re.search(rf'Payload_Stage(\d)_JS\.file', item).group(1)
-                                Stage = int(Stage)
-                                
-                                JS = JS_File(f'{outputs}/Payload_Stage{Stage}_JS.file')
+                            
+                            JS = JS_File(f'{outputs}/{File}')
                             
                         
                         elif Script_Type == 'VBA':
                             print(f'Now attempting to deobfuscate VBA code. This may take some time depending on size of file & VBA content.\n')
                             VBA = VBA_File(VBA)
+                        
+                        elif Script_Type == 'GZ':
+                            data = Unzip_File(item)
+                
+                Dir_List = os.listdir(outputs)
+                i += 1
         else:
             print('File is not supported as of yet.')
 
     # Writes IOCs/IOAs from within original file & stages/payloads found
+    print('\nNow building report. \n    Please wait...\n\n')
     MalwareDetails_Report(ifile)
  
-    print('##############################################################################################################\n')
+    print('\t######################################################################################################\n')
     print('')
     print('Script has been completed. Press enter to exit\n')
     input()

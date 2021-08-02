@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sys, re, base64, binascii, json, pathlib, hashlib, os
+import sys, binascii, pathlib, hashlib, os
+import regex as re
 
 os.chdir(sys.path[0])
 
@@ -8,10 +9,28 @@ imports = pathlib.Path('imports').resolve()
 outputs = pathlib.Path('outputs/').resolve()
 logs = pathlib.Path("outputs/Logs/").resolve()
 
-Binary_Regex = r'(\\x[0-9][0-9]|\\x[a-f][a-f]|\\x[0-9][a-f]|\\x[a-f][0-9])'
+###############################################################################################################
+
+BinaryHex_Regex = r'(\\x[0-9][0-9]|\\x[a-f][a-f]|\\x[0-9][a-f]|\\x[a-f][0-9])'
 IP_Regex = r'(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
-URL_Regex = r'(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))'                                                                                            
-                                                                                            
+URL_Regex = r'(?i)((?:https?|ftp):\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))'
+Domain_Regex = r'(\b((?=[a-z0-9-]{1,63}\.)(xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,63}\b)'
+Email_Regex = r'(\b[A-Za-z0-9.!#$%&\'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b)'
+Registry_Regex = r'(?i)((hk((EY_(CLASSES_ROOT|PERFORMANCE_DATA|LOCAL_MACHINE|CURRENT_(CONFIG|USER)|USERS))|LM|CR|CU|U|CC|PD))\\[\\\w\}\{\.\-\ \*]+)'
+CryptoAddress_Regex = r'(\b(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{25,42}\b)'
+onionAddress_Regex = r'\b[a-z2-7]{16}\.onion\b|\b[a-z2-7]{56}\.onion\b'
+
+Excluded_matches = r'(?i)\w{1,}\.(?:exe|dll|js|png|jpg|php|split|text|cfg|reloc|bindingflags)'
+
+IP_List = []
+URL_List = []
+Domain_List = []
+Email_List = []
+Registry_List = []
+Crypto_List = []
+Onion_List = []
+
+
 header = '''           
 #######################################################################################
 #                         _  _         _           __         _                       #
@@ -38,15 +57,7 @@ def MalwareDetails_Report(ifile):
     ####################################################################### 
     #                       Original File Section                         #
     #######################################################################
-    ifile_Name = re.search(r'[\/\\](\w{1,}\.\w{1,})|[\/\\](\w{1,})$', ifile, re.IGNORECASE) 
-    Domain_List = []
-    IP_List = []
-    
-    if ifile_Name:
-         ifile_Name = re.search(r'[\/\\](\w{1,}\.\w{1,})|[\/\\](\w{1,})$', ifile, re.IGNORECASE).group(1)
-    else:
-        ifile_Name = re.search(r'[\/\\](\w{1,}\.\w{1,})|[\/\\](\w{1,})$', ifile, re.IGNORECASE).group(2)
-
+    ifile_Name = re.search(r'[\/\\](.[a-zA-F0-9()_,. -]{1,})$', ifile, re.IGNORECASE).group(1)
 
     with open(f"{logs}/MalwareDetails.txt", 'w') as w:
         w.writelines(header)
@@ -95,125 +106,254 @@ def MalwareDetails_Report(ifile):
     try:
         
         with open(ifile, 'r') as r:
-            data = r.read()
+            File_Contents = r.read()
         r.close()    
         
-        if re.search(IP_Regex, data, re.MULTILINE):
-            data = re.findall(IP_Regex, data)
-            
-            Payload_IPs = f'''\n\t\tPotential IPs Found:\n'''
-
-            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                a.writelines(Payload_IPs)
-            a.close()
+        if re.search(IP_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(IP_Regex, File_Contents)
 
             i = 0
             while i <= len(data):
                 if i >= len(data):
                     pass
                 else:
-                    if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
-                        IP = data[i][0]
-                        if IP not in IP_List:
-                            IP_List.append(IP)
-                            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                                a.writelines(f'\t\t\t{IP}\n')
-                            a.close()
+                    if re.search(r'\d{1,3}\.0\.0\.0', data[i][0]):
+                        pass
+                    else:
+                        if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
+                            IP = data[i][0]
+                            if IP not in IP_List:
+                                IP_List.append(IP)
                 i += 1
+            data.clear()
+
         #######################################################################
-        # Search for URLs/Domains 
-                
-        with open(ifile, 'r') as r:
-            data = r.read()
-        r.close()    
+        # Search for URLs/Domains     
         
-        if re.search(URL_Regex, data, re.MULTILINE):
-            data = re.findall(URL_Regex, data)
+        if re.search(URL_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(URL_Regex, File_Contents)
             
-            Payload_URL_Domains = f'''\n\t\tURLs/Domains Found:\n'''
-
-            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                a.writelines(Payload_URL_Domains)
-            a.close()
-
             i = 0
             while i <= len(data):
                 if i >= len(data):
                     pass
                 else:
-                    domain = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
+                    URL = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
+
+                    if URL not in URL_List:
+                        URL_List.append(URL)
+                i += 1
+            data.clear()
+
+        if re.search(Domain_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(Domain_Regex, File_Contents)
+            
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    domain = str(data[i][0])
                     if domain not in Domain_List:
                         Domain_List.append(domain)
                         
-                        with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                            a.writelines(f'\t\t\t{domain}\n')
-                        a.close()
                 i += 1
-    
+            data.clear()
+
+        #######################################################################
+        # Search for Emails 
+        
+        if re.search(Email_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(Email_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    email = str(data[i])
+                    if email not in Email_List:
+                        Email_List.append(email)
+                i += 1
+            data.clear()
+
+        #######################################################################
+        # Search for Registry Entries 
+        
+        if re.search(Registry_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(Registry_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    registry = str(data[i][0])
+                    if registry not in Registry_List:
+                        Registry_List.append(registry)
+                i += 1
+            data.clear()
+
+        #######################################################################
+        # Search for Crypto Addresses
+        
+        if re.search(CryptoAddress_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(CryptoAddress_Regex, File_Contents)
+            
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    crypto = str(data[i])
+                    if crypto not in Crypto_List:
+                        Crypto_List.append(crypto)
+                i += 1
+            data.clear()
+
+        #######################################################################
+        # Search for Onion Addresses 
+        
+        if re.search(onionAddress_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(onionAddress_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    onion = str(data[i])
+                    if onion not in Onion_List:
+                        Onion_List.append(onion)
+                i += 1
+            data.clear()
+
     except UnicodeDecodeError:
     # File is binary file. Searches for IPs & URLs if UnicodeDecodeError
     #######################################################################
     # Search for IP 
         
         with open(ifile, 'rb') as rb:
-            data = str(rb.read())    
-        rb.close()
-
-        if re.search(IP_Regex, data, re.MULTILINE):
-            data = re.findall(IP_Regex, data)
-            
-            Payload_IPs = f'''\n\t\tPotential IPs Found:\n'''
-
-            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                a.writelines(Payload_IPs)
-            a.close()
-
-            i = 0
-            while i <= len(data):
-                if i >= len(data):
-                    pass
-                else:
-                    if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
-                        IP = data[i][0]
-                        if IP not in IP_List:
-                            IP_List.append(IP)
-
-                            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                                a.writelines(f'\t\t\t{IP}\n')
-                            a.close()
-                i += 1
-    #######################################################################
-    # Search for URLs/Domains     
-        Domain_List = []
+            File_Contents = str(rb.read())
+        r.close()    
         
-        with open(ifile, 'rb') as rb:
-            data = str(rb.read())
-        r.close()
-
-        if re.search(URL_Regex, data, re.MULTILINE):
-            data = re.findall(URL_Regex, data)
-            
-            Payload_URL_Domains = f'''\n\t\tURLs/Domains Found:\n'''
-
-            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                a.writelines(Payload_URL_Domains)
-            a.close()
+        if re.search(IP_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(IP_Regex, File_Contents)
 
             i = 0
             while i <= len(data):
                 if i >= len(data):
                     pass
                 else:
-                    domain = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
-                    
+                    if re.search(r'\d{1,3}\.0\.0\.0', data[i][0]):
+                        pass
+                    else:
+                        if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
+                            IP = data[i][0]
+                            if IP not in IP_List:
+                                IP_List.append(IP)
+                i += 1
+            data.clear()
+
+        #######################################################################
+        # Search for URLs/Domains  
+        
+        if re.search(URL_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(URL_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    URL = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
+                    if URL not in URL_List:
+                        URL_List.append(URL)
+                i += 1
+            data.clear()
+
+        if re.search(Domain_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(Domain_Regex, File_Contents)
+            
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    domain = str(data[i][0])
                     if domain not in Domain_List:
                         Domain_List.append(domain)
-                        
-                        with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                            a.writelines(f'\t\t\t{domain}\n')
-                        a.close()
                 i += 1
-    
+            data.clear()
+
+        #######################################################################
+        # Search for Emails 
+        
+        if re.search(Email_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(Email_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    email = str(data[i][0])
+                    if email not in Email_List:
+                        Email_List.append(email)
+                i += 1
+            data.clear()
+
+        #######################################################################
+        # Search for Registry Entries 
+        
+        if re.search(Registry_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(Registry_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    registry = str(data[i][0])
+                    if registry not in Registry_List:
+                        Registry_List.append(registry)
+                i += 1
+            data.clear()
+            
+        #######################################################################
+        # Search for Crypto Addresses
+        
+        if re.search(CryptoAddress_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(CryptoAddress_Regex, File_Contents)
+
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    crypto = str(data[i])
+                    if crypto not in Crypto_List:
+                        Crypto_List.append(crypto)
+                i += 1
+            data.clear()
+
+        #######################################################################
+        # Search for Onion Addresses 
+        
+        if re.search(onionAddress_Regex, File_Contents, re.MULTILINE):
+            data = re.findall(onionAddress_Regex, File_Contents)
+            
+            i = 0
+            while i <= len(data):
+                if i >= len(data):
+                    pass
+                else:
+                    onion = str(data[i])
+                    if onion not in Onion_List:
+                        Onion_List.append(onion)
+                i += 1
+            data.clear()
+
     ####################################################################### 
     #               Payloads Found Section                                #
     ####################################################################### 
@@ -259,128 +399,361 @@ def MalwareDetails_Report(ifile):
             SHA256 = ''
         #######################################################################
             # Search for IP 
-            IP_List = []
             
             try:
                 with open(File_Path, 'r') as r:
-                    data = r.read()
+                    File_Contents = r.read()
                 r.close()    
 
-                if re.search(IP_Regex, data, re.MULTILINE):
-                    data = re.findall(IP_Regex, data)
-                    
-                    Payload_IPs = f'''\n\t\tPotential IPs Found:\n'''
-
-                    with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                        a.writelines(Payload_IPs)
-                    a.close()
+                if re.search(IP_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(IP_Regex, File_Contents)
 
                     i = 0
                     while i <= len(data):
                         if i >= len(data):
                             pass
                         else:
-                            if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
-                                IP = data[i][0]
-                                
-
-                                if IP not in IP_List:
-                                    IP_List.append(IP)
-
-                                    with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                                        a.writelines(f'\t\t\t{IP}\n')
-                                    a.close()
+                            if re.search(r'\d{1,3}\.0\.0\.0', data[i][0]):
+                                pass
+                            else:
+                                if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
+                                    IP = data[i][0]
+                                    if IP not in IP_List:
+                                        IP_List.append(IP)
                         i += 1
- 
+                    data.clear()
+
+                #######################################################################
+                # Search for URLs/Domains     
+                
+                if re.search(URL_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(URL_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            URL = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
+                            if URL not in URL_List:
+                                URL_List.append(URL)
+                        i += 1
+                    data.clear()
+
+                if re.search(Domain_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(Domain_Regex, File_Contents)
+                    
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            domain = str(data[i][0])
+                            if domain not in Domain_List:
+                                Domain_List.append(domain)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Emails 
+                
+                if re.search(Email_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(Email_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            email = str(data[i][0])
+                            if email not in Email_List:
+                                Email_List.append(email)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Registry Entries 
+                
+                if re.search(Registry_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(Registry_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            registry = str(data[i][0])
+                            if registry not in Registry_List:
+                                Registry_List.append(registry)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Crypto Addresses
+                
+                if re.search(CryptoAddress_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(CryptoAddress_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            crypto = str(data[i])
+                            if crypto not in Crypto_List:
+                                Crypto_List.append(crypto)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Onion Addresses 
+                
+                if re.search(onionAddress_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(onionAddress_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            onion = str(data[i])
+                            if onion not in Onion_List:
+                                Onion_List.append(onion)
+                        i += 1
+                    data.clear()
+
             except UnicodeDecodeError:
+                
                 with open(File_Path, 'rb') as rb:
-                    data = str(rb.read())
+                    File_Contents = str(rb.read())
                 rb.close()
 
-                if re.search(IP_Regex, data, re.MULTILINE):
-                    data = re.findall(IP_Regex, data)
-                    
-                    Payload_IPs = f'''\n\t\tPotential IPs Found:\n'''
-
-                    with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                        a.writelines(Payload_IPs)
-                    a.close()
+                if re.search(IP_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(IP_Regex, File_Contents)
 
                     i = 0
                     while i <= len(data):
                         if i >= len(data):
                             pass
                         else:
-                            if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
-                                IP = data[i][0]
-                                
+                            if re.search(r'\d{1,3}\.0\.0\.0', data[i][0]):
+                                pass
+                            else:
+                                if re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', data[i][0]):
+                                    IP = data[i][0]
+                                    if IP not in IP_List:
+                                        IP_List.append(IP)
+                        i += 1
+                    data.clear()
 
-                                if IP not in IP_List:
-                                    IP_List.append(IP)
-
-                                    with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                                        a.writelines(f'\t\t\t{IP}\n')
-                                    a.close()
-                        i += 1   
+                #######################################################################
+                # Search for URLs/Domains     
                 
+                if re.search(URL_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(URL_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            URL = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
+                            if URL not in URL_List:
+                                URL_List.append(URL)
+                        i += 1
+                    data.clear()
+
+                if re.search(Domain_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(Domain_Regex, File_Contents)
+                    
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            domain = str(data[i][0])
+                            if domain not in Domain_List:
+                                Domain_List.append(domain)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Emails 
+                
+                if re.search(Email_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(Email_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            email = str(data[i][0])
+                            if email not in Email_List:
+                                Email_List.append(email)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Registry Entries 
+                
+                if re.search(Registry_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(Registry_Regex, File_Contents)
+
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            registry = str(data[i][0])
+                            if registry not in Registry_List:
+                                Registry_List.append(registry)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Crypto Addresses
+                
+                if re.search(CryptoAddress_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(CryptoAddress_Regex, File_Contents)
+                    
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            crypto = str(data[i])
+                            if crypto not in Crypto_List:
+                                Crypto_List.append(crypto)
+                        i += 1
+                    data.clear()
+
+                #######################################################################
+                # Search for Onion Addresses 
+                
+                if re.search(onionAddress_Regex, File_Contents, re.MULTILINE):
+                    data = re.findall(onionAddress_Regex, File_Contents)
+                    
+                    i = 0
+                    while i <= len(data):
+                        if i >= len(data):
+                            pass
+                        else:
+                            onion = str(data[i])
+                            if onion not in Onion_List:
+                                Onion_List.append(onion)
+                        i += 1
+                    data.clear()
+
+
+    if IP_List or URL_List or Domain_List or Email_List or Registry_List or Crypto_List or Onion_List:
+        Payload_Details = '''\n\n\tIOC/IOA(s) Found:\n'''
+
+        with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+            a.writelines(Payload_Details)
+        a.close()
+        
         #######################################################################
-            # Search for URLs/Domains 
+        # Write IPs  
+        
+        if IP_List:
+            Payload_Details = '''\n\t\tIP(s) Found:\n'''
+
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
             
-            try:
-                with open(File_Path, 'r') as r:
-                    data = r.read()
-                r.close()    
+            IP_List.sort()
+            for item in IP_List:
+                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                    a.writelines(f'\t\t\t{item}\n')
+            a.close()
+        
+        #######################################################################
+        # Write URLs  
+        
+        if URL_List:
+            Payload_Details = '''\n\t\tURL(s) Found:\n'''
 
-                if re.search(URL_Regex, data, re.MULTILINE):
-                    data = re.findall(URL_Regex, data)
-                    
-                    Payload_URL_Domains = f'''\n\t\tURLs/Domains Found:\n'''
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
+            URL_List.sort()
+            for item in URL_List:
+                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                    a.writelines(f'\t\t\t{item}\n')
+            a.close()
+        
+        #######################################################################
+        # Write Domains  
+        
+        if Domain_List:
+            Payload_Details = '''\n\t\tPotential Domains Found:\n'''
 
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
+            
+            Domain_List.sort()
+            for item in Domain_List:
+                if not re.search(Excluded_matches, item, re.MULTILINE):
                     with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                        a.writelines(Payload_URL_Domains)
-                    a.close()
+                        a.writelines(f'\t\t\t{item}\n')
+            a.close()
+        
+        #######################################################################
+        # Write Onion Addresses  
+        
+        if Onion_List:
+            Payload_Details = '''\n\t\tOnion Address(es) Found:\n'''
 
-                    i = 0
-                    while i <= len(data):
-                        if i >= len(data):
-                            pass
-                        else:
-                            domain = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
-                            
-                            if domain not in Domain_List:
-                                Domain_List.append(domain)
-                                
-                                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                                    a.writelines(f'\t\t\t{domain}\n')
-                                a.close()
-                        i += 1
-            except UnicodeDecodeError:
-                
-                with open(File_Path, 'rb') as rb:
-                    data = str(rb.read())
-                rb.close()
-                
-                if re.search(URL_Regex, data, re.MULTILINE):
-                    data = re.findall(URL_Regex, data)
-                    
-                    Payload_URL_Domains = f'''\n\t\tURLs/Domains Found:\n'''
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
+            
+            Onion_List.sort()
+            for item in Onion_List:
+                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                    a.writelines(f'\t\t\t{item}\n')
+            a.close()
+        
+        #######################################################################
+        # Write Registry  
+        
+        if Registry_List:
+            Payload_Details = '''\n\t\tRegistry Entries Found:\n'''
 
-                    with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                        a.writelines(Payload_URL_Domains)
-                    a.close()
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
+            
+            Registry_List.sort()
+            for item in Registry_List:
+                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                    a.writelines(f'\t\t\t{item}\n')
+            a.close()
+        
+        #######################################################################
+        # Write Emails  
+        
+        if Email_List:
+            Payload_Details = '''\n\t\tEmails(s) Found:\n'''
 
-                    i = 0
-                    while i <= len(data):
-                        if i >= len(data):
-                            pass
-                        else:
-                            domain = str(data[i][0]).replace('.', '[.]').replace('http', 'hxxp')
-                            
-                            if domain not in Domain_List:
-                                Domain_List.append(domain)
-                                
-                                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
-                                    a.writelines(f'\t\t\t{domain}\n')
-                                a.close()
-                        i += 1
-        #######################################################################                
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
+            
+            Email_List.sort()
+            for item in Email_List:
+                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                    a.writelines(f'\t\t\t{item}\n')
+            a.close()
+        
+        #######################################################################
+        # Write Crypto Addresses  
+        
+        if Crypto_List:
+            Payload_Details = '''\n\t\tPotential Crypto Address(es) Found:\n'''
+            
+            with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                a.writelines(Payload_Details)
+            
+            Crypto_List.sort()
+            for item in Crypto_List:
+                with open(f"{logs}/MalwareDetails.txt", 'a') as a:
+                    a.writelines(f'\t\t\t{item}\n')
+            a.close()

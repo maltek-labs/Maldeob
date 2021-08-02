@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
-import sys, base64, binascii, json, pathlib, os, shutil
+import sys, base64, binascii, json, pathlib, os
 import regex as re
-from imports.Signature import Signature, File_Check
-from oletools.olevba import VBA_Parser, TYPE_OLE, TYPE_OpenXML, TYPE_Word2003_XML, TYPE_MHTML
+from imports.Signature import Signature, File_Check, Write_Binary_Payload, Write_Script_Payload
+from oletools.olevba import VBA_Parser
 
 os.chdir(sys.path[0])
 
 imports = pathlib.Path('imports').resolve()
 outputs = pathlib.Path('outputs').resolve()
-json_file = pathlib.Path('imports/Signatures.json').resolve()
 ASCII_file = pathlib.Path('imports/ASCII.json').resolve()
 
 ################################################################################################################
@@ -23,13 +22,13 @@ def Check_VBA(ifile):
         ifile_Name = re.search(r'[\/\\](\w{1,}\.\w{1,})|[\/\\](\w{1,})$', ifile, re.IGNORECASE).group(2)
 
     if vbaparser.detect_vba_macros():
-        print(f'''
-        ################################################################
-         VBA Macros have been found in {ifile_Name}.                       
-        ################################################################\n
         
-        Attempting to pull macros... 
-         ''')
+        print(f'''\t
+        \t\t|-------------------------------------------------------------------|
+        \t\t\tVBA Macros have been found in {ifile_Name}.
+        \n\t\t\t\tAttempting to pull macros... 
+        \t\t|-------------------------------------------------------------------|
+        ''')
 
         results = vbaparser.analyze_macros(show_decoded_strings=True, deobfuscate=True)
         
@@ -37,209 +36,401 @@ def Check_VBA(ifile):
         #    Results_List.append('type: %s | keyword: %s' % (kw_type, keyword) + '\n')
         
         VBA = vbaparser.reveal()
-        
-        
+
         with open(f"{outputs}/Payload_VBA.file", 'w', errors='ignore') as payload:
             payload.write(VBA)
         payload.close()
 
-        print(f'Pull successful. Original File VBA Code has been saved to {outputs} as Payload_VBA.file.\n')
+        print(f'Pull successful. Original File VBA Code has been saved to {outputs} as Payload_VBA.file.')
     else:
         print(f'VBA Macros have not been found in {ifile}.\n')
         VBA = False
     return VBA
+
 ################################################################################################################
 
-def Single_Init_Var(VBA):
-    VarName = re.findall(r'Dim\s\b([\w]{1,}\b)', VBA, re.MULTILINE)
+def Code_CleanUp(VBA):
+    # General code cleanup. concats strings together in case either direct VBA file is inputted or missed during VBA check. 
+    # More to come as methods are found.
     
-    for item in VarName:
-        if VarName.count(item) >= 2:
-            VarName.remove(item)
+    if re.search(r'((?:\"(?:&| & | &|& )\")|(?:\'(?:&| & | &|& )\'))', VBA, re.MULTILINE):
+        VBA = re.sub(r'((?:\"(?:&| & | &|& )\")|(?:\'(?:&| & | &|& )\'))', '', VBA)
+    
+    if re.search(r'(?i)\([\"\']MSScriptControl\.ScriptControl[\"\']\)\.Language[ =]{1,3}[\"\']JScript[\"\']', VBA, re.MULTILINE):
+        VBA = re.sub(r';', ';\n', VBA)
 
-    i = 0
-    while i < len(VarName):
-        regex = rf"Dim\s{VarName[i]}.*?[\n$]"
-        if VBA.count(VarName[i]) == 2:        
-            text_after = re.sub(regex, '', VBA, flags=re.MULTILINE)
-            VBA = text_after
-            
-        i += 1
     return VBA
 
+################################################################################################################
+
+def VBA_File(VBA):
+    
+    if VBA:
+        try: 
+            
+            ################################
+            
+            print('\n\t\t\t####################################################################')
+            VBA = VBA_Var_Replace(VBA)
+            
+            if re.search(r'ChrW\(\d{1,3}\)|Chr\(\d{1,3}\)', VBA, re.MULTILINE):
+                print('\n\t\t\t####################################################################')
+                VBA = VBA_ChrW_Replace(VBA)
+                
+            if re.search(r'\"([0-9a-fA-F]{2,})\"|\'([0-9a-fA-F]{2,})\'', VBA, re.MULTILINE):
+                print('\n\t\t\t####################################################################')
+                VBA = VBA_HEX_Deobfuscation(VBA)
+
+            VBA = Code_CleanUp(VBA)
+
+            if re.search(r'((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?)', VBA, re.MULTILINE):
+                print('\n\t\t\t####################################################################')
+                VBA = Base64_Decode_VBA(VBA)
+            
+            ################################
+            
+            VBA = Code_CleanUp(VBA)
+
+            if VBA:
+                with open(f"{outputs}/Payload_Deobfuscated_VBA.file", 'w', encoding='utf-8') as payload:
+                    payload.write(VBA)
+                payload.close()
+                print(f'\nDeobfuscated VBA Code has been saved to {outputs} as Payload_Deobfuscated_VBA.file.\n')
+        except:
+            print('There was an error that has occurred during deobfuscation. Original VBA code has been restored.\n')
+            print('Manual investigation & deobfuscation will be needed.\n')
 
 ################################################################################################################
 def VBA_Var_Replace(VBA):
     
-    VarName = re.findall(r'Dim\s\b([\w]{1,}\b)', VBA, re.MULTILINE)
-    for Var in VarName:       
+    try: 
+        # Comment clean up if there is any. 
+        if re.search(r'^\s{1,}\'.*\n', VBA, re.MULTILINE):
+            VBA = re.sub(r'^\s{1,}\'.*\n', '', VBA)
+        
+        # Attempts to replace potential Hex values found in code. Stored backup of original code in Original_VBA.
+        Original_VBA = VBA
 
-        if re.search(rf'Dim\s(\b{Var}\b)', VBA, re.MULTILINE):
-            VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var_{Var} ', VBA, count=1)
+        Tally_Count = 0
+
+        VarName_List = re.findall(r'\s(\b[\w]{1,}\b)\sAs', VBA, re.MULTILINE)
+        Dim_VarName_List = re.findall(r'Dim\s(\b[\w]{1,}\b)\s', VBA, re.MULTILINE)
+        Set_VarName_List = re.findall(r'Set\s(\b[\w]{1,}\b)\s', VBA, re.MULTILINE)
+        Not_Completed_VarName_List = []
+
+        for item in Dim_VarName_List:
+            if item not in VarName_List:
+                VarName_List.append(item)
+
+        for item in Set_VarName_List:
+            if item not in VarName_List:
+                VarName_List.append(item)
+        
+        
+        print(f'Total Amount of variables to replace is: {len(VarName_List)}')
+        print('Attempting to replace variables with contents. \n\tPlease wait...\n\n')
+
+        for item in VarName_List:       
             
-            while re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):    
-                
-                if re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-                    VarContents = re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE).group(1)
-                    VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var_{Var} ', VBA, count=1)
+            Matches_Num = 0
+            for match in re.finditer(rf'\b{item}\b\s=\s', VBA):
+                Matches_Num += 1
+            
+            if Matches_Num == 0:
+                VBA = re.sub(rf'Dim\s\b{item}\b', '', VBA, count=1)
+                Tally_Count += 1
+                print(f'Completed {Tally_Count} out of {len(VarName_List)}')
+            
+            if Matches_Num == 1:
+                # Removes Dim Variable
+                VBA = re.sub(rf'Dim\s\b{item}\b.*\n', '', VBA, count=1)
+
+                # Pulls, removes, & replaces Variable with contents found
+                VarContents = re.search(rf'\b{item}\b\s=\s(.*?)\n', VBA).group(1)
+                VBA = re.sub(rf'\b{item}\b\s=\s.*\n', '', VBA, count=1)
+                VBA = re.sub(rf'\b{item}\b', VarContents, VBA)
+
+                Tally_Count += 1
+                print(f'Completed {Tally_Count} out of {len(VarName_List)}')
+
+            if Matches_Num >= 2:
+                if re.search(rf'\b{item}\b\s=\s.*\b{item}\b.*\n', VBA , re.MULTILINE):
+                    # Removes Dim Variable
+                    VBA = re.sub(rf'Dim\s\b{item}\b.*\n', '', VBA, count=1)
+
+                    # Pulls, removes, & sets up Variable Contents for replacement
+                    VarContents = re.search(rf'\b{item}\b\s=\s(.*?)\n', VBA).group(1)
+                    VBA = re.sub(rf'\b{item}\b\s=\s.*\n', '', VBA, count=1)
                     
+                    VBA = re.sub(rf'\b{item}\b', rf'Var_{item}', VBA, count=1)
+                    VBA = re.sub(rf'\b{item}\b', rf'{VarContents}', VBA, count=1)
+                    VarContents = re.search(rf'\bVar_{item}\b\s=\s(.*?)\n', VBA).group(1)
+
+                    if not re.search(rf"\b{item}\b\s=\s(.*?)$", VBA, re.MULTILINE):
+                        VBA = re.sub(rf'\bVar_{item}\b\s=\s.*\n', '', VBA, count=1)
+                        VBA = re.sub(rf'\b{item}\b', VarContents, VBA)
+                        Tally_Count += 1
+                        print(f'Completed {Tally_Count} out of {len(VarName_List)}')
                     
-                    if re.search(rf"\b{Var}\b\s=\s.*\b{Var}\b", VBA, re.MULTILINE):
-                        VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var__{Var} ', VBA, count=1)
-                        
-                        VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA, count=1)
-                        VarContents = re.search(rf"Var__{Var}\s=\s(.*?)$", VBA, re.MULTILINE).group(1)
-                        
-                        if not re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-                            VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA)
+                    elif re.search(rf"\bVar_{item}\b\s=\s.*?$", VBA, re.MULTILINE):
+                        if not re.search(rf"\b{item}\b\s=\s(.*?)$", VBA, re.MULTILINE):
+                            VBA = re.sub(rf'\b{item}\b', VarContents, VBA)
+                            Tally_Count += 1
+                            print(f'Completed {Tally_Count} out of {len(VarName_List)}')
+                    
+                        else:
+                        # Loops through VBA code and replaces all variables being reassigned to itself
+                            while VBA.count(item) >= 3:
+                                
+                                VarContents = re.search(rf'\bVar_{item}\b\s=\s(.*?)\n', VBA).group(1)
+                                VBA = re.sub(rf'\bVar_{item}\b\s=\s.*\n', '', VBA, count=1)
+                                
+                                VBA = re.sub(rf'\b{item}\b', rf'Var_{item}', VBA, count=1)
+                                VBA = re.sub(rf'\b{item}\b', rf'{VarContents}', VBA, count=1)
+                                
+                                if VBA.count(item) == 2:
+                                    break
+
+                            # Final assignment & replacement of variable contents
+                            VarContents = re.search(rf'\bVar_{item}\b\s=\s(.*?)\n', VBA).group(1)
+                            VBA = re.sub(rf'\bVar_{item}\b\s=\s.*\n', '', VBA, count=1)
+                            VBA = re.sub(rf'\b{item}\b', rf'{VarContents}', VBA, count=1)
+                            Tally_Count += 1
+                            print(f'Completed {Tally_Count} out of {len(VarName_List)}')
 
                 else:
-                    VBA = re.sub(rf'(?i)\b({Var})\b\s', f'{VarContents}', VBA)
-                    break
-        
-        if re.search(rf"\b{Var}\b\s=\s.*\b{Var}\b", VBA, re.MULTILINE):
-            VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var_{Var} ', VBA, count=1)
-            VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA, count=1)
-            VarContents = re.search(rf"\bVar_{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE).group(1)
-           
-            if not re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-                if not re.search(rf"\b{Var}\b\s=\s.*\b{Var}\b", VBA, re.MULTILINE):
-                    VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA)
-        else: 
-            if not re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-               
-                if VarContents:
-                    VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA)
-    VarName.clear()
-
-    ######################################################################
-
-    VarName = re.findall(r'Set\s\b([\w]{1,}\b)', VBA, re.MULTILINE)
-    for Var in VarName:       
-        if re.search(rf'Set\s(\b{Var}\b)', VBA, re.MULTILINE):
-            VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var_{Var} ', VBA, count=1)
-            
-            while re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):    
-                
-                if re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-                    VarContents = re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE).group(1)
-                    VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var_{Var} ', VBA, count=1)
+                    Not_Completed_VarName_List.append(item)
                     
-                    
-                    if re.search(rf"\b{Var}\b\s=\s.*\b{Var}\b", VBA, re.MULTILINE):
-                        VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var__{Var} ', VBA, count=1)
-                        
-                        VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA, count=1)
-                        VarContents = re.search(rf"Var__{Var}\s=\s(.*?)$", VBA, re.MULTILINE).group(1)
-                        
-                        if not re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-                            VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA)
+                    # In progress Code: 
 
-                else:
-                    VBA = re.sub(rf'(?i)\b({Var})\b\s', f'{VarContents}', VBA)
-                    break
+                        # while VBA.count(item) >= 3:
+                        #     if re.search(rf'\b{item}\b\s=\s.*\n', VBA , re.MULTILINE):
+                                
+                        #         if re.search(rf'Dim\s\b{item}\b\sAs\s\w{1,}', VBA , re.MULTILINE):
+                        #             VBA = re.sub(rf'Dim\s\b{item}\b\sAs\s\w{1,}\n', '', VBA, count=1)
+                                    
+                        #         elif re.search(rf'Dim\s\b{item}\b\sAs\s\w{1,},', VBA , re.MULTILINE):
+                        #             VBA = re.sub(rf'Dim\s\b{item}\b\sAs\s\w{1,},', '', VBA, count=1)
+                                
+                        #         elif re.search(rf'Dim\s\b{item}\b\n', VBA , re.MULTILINE):
+                        #             VBA = re.sub(rf'Dim\s\b{item}\b\n', '', VBA, count=1)
+                                
+                        #         elif re.search(rf'Dim\s\b{item}\b,', VBA , re.MULTILINE):
+                        #             VBA = re.sub(rf'Dim\s\b{item}\b,', '', VBA, count=1)
+                                
+                        #         elif re.search(rf',\s\b{item}\b\sAs\sObject\n', VBA , re.MULTILINE):
+                        #             VBA = re.sub(rf',\s\b{item}\b\sAs\sObject\n', '', VBA, count=1)
+                                
+                        #         # Removes Variable assignment
+                        #         VBA = re.sub(rf'\s\b{item}\b\sAs\s\w{1,},|\s\b{item}\b[,\n]', '', VBA, count=1)
+                        #         # print(VBA)
+
+                        #         # Pulls & removes Contents of Variable
+                        #         VarContents = re.search(rf'\b{item}\b\s=\s(.*?)\n', VBA).group(1)
+                        #         VBA = re.sub(rf'\b{item}\b\s=\s.*\n', '', VBA, count=1)
+                                
+                                
+
+                        #         if not re.search(rf'\b{item}\b\s=\s.*\n', VBA , re.MULTILINE):
+                        #             # Replaces next Variable with contents
+                        #             VBA = re.sub(rf'\b{item}\b', rf'{VarContents}', VBA)
+                        #         elif re.search(rf'\b{item}\b\s=\s.*\n', VBA , re.MULTILINE):
+                        #             VBA = re.sub(rf'\b{item}\b', rf'{VarContents}', VBA, count=1)
+                        #     else:
+                        #         break
         
-        if re.search(rf"\b{Var}\b\s=\s.*\b{Var}\b", VBA, re.MULTILINE):
-            VBA = re.sub(rf'(?i)\b({Var})\b\s', f'Var_{Var} ', VBA, count=1)
-            VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA, count=1)
-            VarContents = re.search(rf"\bVar_{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE).group(1)
-           
-            if not re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-                if not re.search(rf"\b{Var}\b\s=\s.*\b{Var}\b", VBA, re.MULTILINE):
-                    VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA)
-        else: 
-            if not re.search(rf"\b{Var}\b\s=\s(.*?)$", VBA, re.MULTILINE):
-               
-                if VarContents:
-                    VBA = re.sub(rf'(?i)\b({Var})\b', VarContents, VBA)
-    
-    VarName.clear()
-    
-    Var_Name_Regex = r'(\b\w{1,}\b)\s=\s\".*?\"|(\b\w{1,}\b)\s=\s\'.*?\''
-    Var_List = re.findall(Var_Name_Regex, VBA)
+        VarName_List.clear()
 
-    for item in Var_List:
-        if re.search(rf'\b{item}\b\s=\s\".*?\"', item):
-        
-            Var_String = rf'\b{item}\b\s=\s(\".*?\")'.group(1)
-            VBA = re.sub(item, f'Var_{item}', count=1)
-            VBA = re.sub(item, Var_String, count=1)
-        elif re.search(r'(\b\w{1,}\b)\s=\s\'.*?\'', item):
-            Var_String = rf'\b{item}\b\s=\s(\'.*?\')'.group(1)
-            VBA = re.sub(item, f'Var_{item}', count=1)
-            VBA = re.sub(item, Var_String, count=1)
 
-    VBA = VBA.replace('" + "', '').replace("' + '", '').replace(' + ', '')
-    VBA = VBA.replace('Var_', '').replace('Var__', '')
+        if Not_Completed_VarName_List:
+            print('Not all variables have been completed. Some manual work may be required.\n')
+            print(f'\nThe variables that have not been completed are: {Not_Completed_VarName_List}')
+        else:
+            VBA = VBA.replace('Set', '')
+            VBA = re.sub(r'^\s{2,}\bAs\s\w{1,}\b', '', VBA)
+    
+    except:
+        # If errors occurs old VBA Code is restored then returned. 
+        print('There was an error when replacing Variables with contents. Restoring VBA code and continuing analysis.')
+        VBA = Original_VBA
     
     return VBA
 
 ################################################################################################################
 def VBA_ChrW_Replace(VBA):
-    ChrW_Regex = r'(ChrW\(\d{1,3}\)|Chr\(\d{1,3}\))'
-    ChrW_Contents_Regex = r'ChrW\((\d{1,3})\)|Chr\((\d{1,3})\)'
+    try: 
+    # Attempts to replace potential Hex values found in code. Stored backup of original code in Original_VBA.
+        Original_VBA = VBA
 
-    ChrW = re.findall(ChrW_Regex, VBA)
+
+        print('Attempting to decode & replace Chr/ChrW with ASCII characters. \n\tPlease wait...\n\n')
+
+        ChrW_Regex = r'(ChrW?\(\d{1,3}\))'
+        ChrW_Contents_Regex = r'ChrW?\((\d{1,3})\)'
+
+        ChrW = re.findall(ChrW_Regex, VBA)
+
+        with open(ASCII_file, 'r') as data:
+            data = json.load(data)
+
+        for item in ChrW:
+            Char_Contents = re.search(ChrW_Contents_Regex, item).group(1)
+            for value in list(filter(lambda x:x["code"] == Char_Contents, data)):
+                ASCII_Value = list(filter(lambda x:x["code"] == Char_Contents, data))[0]['ascii']
+                VBA = re.sub(rf'(ChrW?\({Char_Contents}\))', f"\'{ASCII_Value}\'", VBA)
+
+            VBA = re.sub(r'(\s&\s)', '', VBA)
+            VBA = re.sub(r'(\'\')', '', VBA)
+        
+        print('Completed Chr/ChW decode.\n')
     
-    with open(ASCII_file, 'r') as data:
-        data = json.load(data)
-
-
-    for item in ChrW:
-        Char_Contents = re.search(ChrW_Contents_Regex, item).group(1)
-        for value in list(filter(lambda x:x["code"] == Char_Contents, data)):
-            ASCII_Value = list(filter(lambda x:x["code"] == Char_Contents, data))[0]['ascii']
-            VBA = re.sub(rf'(ChrW\({Char_Contents}\))', f"'{ASCII_Value}'", VBA)
-
-        VBA = re.sub(r'(\s&\s)', '', VBA)
-        VBA = re.sub(r'(\'\')', '', VBA)
+    except:
+        # If errors occurs old VBA Code is restored then returned. 
+        VBA = Original_VBA
+        print('There was an error during deobfuscating Chr/ChrW content. Restoring VBA code and continuing analysis.')
     
     return VBA
 
 ################################################################################################################
 
-def VBA_HEX_Replace(VBA):
-    VBA_Hex_Regex = r'\"([0-9a-fA-F]{2,})\"|\'([0-9a-fA-F]{2,})\''
-    Hex_Functon_Regex = r'(\w{1,}\(\"[0-9a-fA-F]{2,}\"\)|\(\'[0-9a-fA-F]{2,}\'\))'
-    Find_Hex_Functions = re.findall(Hex_Functon_Regex, VBA)
-    
-
-    for item in Find_Hex_Functions:
-        
-        Hex_Value = re.search(VBA_Hex_Regex, item).group(1)
-        ascii_Chr = str(binascii.unhexlify(Hex_Value)).replace('b', '').replace('\'', '\"')
+def VBA_HEX_Deobfuscation(VBA):
+    try: 
+        # Attempts to replace potential Hex values found in code & stores backup of original code in Original_VBA.
+        Original_VBA = VBA
         
         
-        Full_Function = rf'{item}'.replace(')', '\)').replace('(', '\(').replace('"', '\\"')
-        Full_Function = rf'({Full_Function})'
+        print('\nAttempting to check for HEX encoded data. \n\tPlease wait...\n\n')
+
+        VBA_Hex_Regex = r'\"([0-9a-fA-F]{2,})\"|\'([0-9a-fA-F]{2,})\''
+        Hex_Functon_Regex = r'(\w{1,}\(\"[0-9a-fA-F]{2,}\"\)|\(\'[0-9a-fA-F]{2,}\'\))'
+        Find_Hex_Functions = re.findall(Hex_Functon_Regex, VBA)
         
-        VBA = re.sub(Full_Function, ascii_Chr, VBA)
-        VBA = re.sub(r'(\"\s&\s\"|\'\s&\s\')', '', VBA)
 
-    return VBA
-
-
-def String_Replace(VBA):
+        for item in Find_Hex_Functions:
+            
+            Hex_Value = re.search(VBA_Hex_Regex, item).group(1)
+            ascii_Chr = str(binascii.unhexlify(Hex_Value)).replace('b', '').replace('\'', '\"')
+            
+            
+            Full_Function = rf'{item}'.replace(')', '\)').replace('(', '\(').replace('"', '\\"')
+            Full_Function = rf'({Full_Function})'
+            
+            VBA = re.sub(Full_Function, ascii_Chr, VBA)
+            VBA = re.sub(r'(\"\s&\s\"|\'\s&\s\')', '', VBA)
+        
+        print('\nCompleted decoding HEX data. ')
     
-    Var_Name_Regex = r'(\b\w{1,}\b)\s=\s\".*?\"'
-    Var_List = re.findall(Var_Name_Regex, VBA)
-    for item in Var_List:
-        Var_String = re.search(rf'\b{item}\b\s=\s(\".*?\")', VBA, re.MULTILINE).group(1)
-        VBA = re.sub(rf'\b{item}\b', f'Var_{item}', VBA, count=1)
-        VBA = re.sub(rf'\b{item}\b', Var_String, VBA, count=1)   
-    Var_List.clear()
+        #######################################################################################
 
+        # Variable Setup    
+        Stage_Calc = []
+        
+        Hex_Regex1 = r'\"([0-9a-fA-F]{2,})\"'
+        Hex_Regex2 = r'\'([0-9a-fA-F]{2,})\''
+        
+        # Pulls all Hex values found in code
+        if re.search(Hex_Regex1, VBA, re.MULTILINE):
+            Hex_List = re.findall(Hex_Regex1, VBA)
+        elif re.search(Hex_Regex2, VBA, re.MULTILINE):
+            Hex_List = re.findall(Hex_Regex2, VBA)
+
+        for item in Hex_List:
+            # Sets up the magic byte value
+            Magic_Byte = item[:24]
+            
+            # Formats the hex into proper format for parsing
+            Magic_Byte = (' '.join(Magic_Byte[i:i+2] for i in range(0,len(Magic_Byte),2)))
+            File_Data = binascii.unhexlify(item)
+
+            # Checks for any known signatures and outputs data if found. 
+            File_Found = Signature(Magic_Byte)
+
+            if File_Found:
+                print('\nHEX obfuscated payload has been detected. Writing payload.')
+                Write_Binary_Payload(File_Found, File_Data)
+
+    except:
+        # If errors occurs old VBA Code is restored then returned. 
+        VBA = Original_VBA
+        print('No HEX Content found. Continuing analysis.\n')
     
-    Var_Name_Regex = r'(\b\w{1,}\b)\s=\s\'.*?\''
-    Var_List = re.findall(Var_Name_Regex, VBA)
-    for item in Var_List:
-        Var_String = re.search(rf'\b{item}\b\s=\s(\'.*?\')', VBA, re.MULTILINE).group(1)
-        VBA = re.sub(rf'\b{item}\b', f'Var_{item}', VBA, count=1)
-        VBA = re.sub(rf'\b{item}\b', Var_String, VBA, count=1)   
-    Var_List.clear()
+    return VBA 
 
+################################################################################################################
 
-    VBA = VBA.replace('" + "', '').replace("' + '", '').replace(' + ', '')
-    VBA = VBA.replace('Var_', '').replace('Var__', '')
+def Base64_Decode_VBA(VBA):
+    Original_VBA = VBA
     
+    try:
+        print('\nAttempting to check for Base64 encoded data...\n')
+        
+        Base64_Search = re.findall(r'((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?)', VBA, re.MULTILINE)
+    
+        if Base64_Search:
+            for item in Base64_Search:
+                
+                if len(item) <= 18:
+                    pass
+                
+                elif len(item) >= 19 and len(item) <= 122:
+                    try:
+                        
+                        Decoded_Data = base64.decodebytes(bytearray(item, 'utf-8')).decode('utf-8')
+                        if '\x00' in Decoded_Data:
+                            pass
+                        else:
+                            print('Base64 encoded data found. Replacing data with:\n ')
+                            print(f'{Decoded_Data}')
+                            VBA = VBA.replace(item, Decoded_Data)
+                    
+                    except UnicodeDecodeError:
+                        pass
+                
+                elif len(item) >= 123:          
+                    try:
+                        
+                        # Attempts to decode Base64 encoded data that have been encoded with UTF-8 that may contain additonal payloads or stages. (PowerShell, JavaScript, etc). 
+                        # If file is binary a UniDecodeError occurs and handling of binary file is executed.
+                        File_Data = base64.decodebytes(bytearray(item, 'utf-8')).decode('utf-8')
+
+                        #checks to see if Script Matches Regex values by calling File_Check in Signatures.py then writes to outputs folder if it exists. 
+                        File_Found = File_Check(File_Data)
+                        
+                        if File_Found:
+                            print('Base64 encoded script found.\n')
+                            Write_Script_Payload(File_Found, File_Data)
+                        if len(item) >= 300:
+                            pass
+                        
+                            
+
+                    except UnicodeDecodeError:
+                        
+                        # If malware has a Base64 file encoded (PE file for example) the decoding throws a UnicodeDecodeError exception and the file is decoded. 
+                        File_Data = base64.decodebytes(bytearray(item, 'ascii'))
+                        
+                        Magic_Byte = str(binascii.hexlify(binascii.a2b_base64(item))).replace('b\'', '').replace('\'', '').upper()
+                        
+
+                        # Builds the Magic Byte value from the decoded bytes after conversion to the proper starting length.
+                        while len(Magic_Byte) >= 13:
+                            Magic_Byte = str(Magic_Byte)[:-1]
+                        
+                        Magic_Byte = (' '.join(Magic_Byte[i:i+2] for i in range(0,len(Magic_Byte),2)))
+                        
+                        # Checks to see if Magic Byte value exists by calling Signature from Signatures.py then writes to outputs folder if it exists. 
+                        File_Found = Signature(Magic_Byte)
+                        
+                        if File_Found:
+                            if len(item) >= 1000:
+                            
+                                print('\nBase64 encoded payload has been detected. Writing payload.')
+                                Write_Binary_Payload(File_Found, File_Data)
+                            else:
+                                print('\nCould not save file. Incomplete PE file found. PE may be segmented in code.')
+        
+    except:         
+        VBA = Original_VBA
+        print('There was an error during deobfuscating Base64 content. Restoring VBA code and continuing analysis.')
+                    
     return VBA
